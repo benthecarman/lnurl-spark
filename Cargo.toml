@@ -13,8 +13,8 @@ name = "lnurl-spark"
 path = "src/main.rs"
 
 [dependencies]
-spark-wallet = { path = "../rust-spark/crates/spark-wallet" }
-spark = { path = "../rust-spark/crates/spark" }
+spark-wallet = { git = "https://github.com/breez/spark-sdk.git", rev = "2c10bbad3f9520ff03da92ee15068fbe57ad72f5" }
+spark = { git = "https://github.com/breez/spark-sdk.git", rev = "2c10bbad3f9520ff03da92ee15068fbe57ad72f5" }
 
 anyhow = "1.0"
 axum = "0.6.20"
