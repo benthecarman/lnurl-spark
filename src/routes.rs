@@ -16,6 +16,7 @@ use log::error;
 use nostr::{Event, JsonUtil};
 use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_json::{json, Value};
+use spark::services::InvoiceDescription;
 use std::fmt::Display;
 use std::str::FromStr;
 
@@ -63,7 +64,7 @@ pub(crate) async fn get_invoice_impl(
     }
 
     let mut zap_request = None;
-    let _desc_hash = match params.nostr.as_ref() {
+    let desc_hash = match params.nostr.as_ref() {
         None => {
             let metadata = calc_metadata(name, &state.domain);
             sha256::Hash::hash(metadata.as_bytes())
@@ -78,13 +79,14 @@ pub(crate) async fn get_invoice_impl(
         }
     };
 
-    // todo need description hash
     let resp = state
         .wallet
-        .create_lightning_invoice_for_pubkey(
+        .create_lightning_invoice(
             amount_msats / 1_000, // todo they dont support msats
-            None,
-            user.pubkey(),
+            Some(InvoiceDescription::DescriptionHash(
+                desc_hash.to_byte_array(),
+            )),
+            Some(user.pubkey()),
         )
         .await?;
 
@@ -139,12 +141,12 @@ pub async fn get_invoice(
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     match get_invoice_impl(&state, &name, params).await {
         Ok(invoice) => {
-            let payment_hash = hex::encode(invoice.payment_hash().to_byte_array());
-            let verify_url = format!("https://{}/verify/{name}/{payment_hash}", state.domain);
+            // let payment_hash = hex::encode(invoice.payment_hash().to_byte_array());
+            // let verify_url = format!("https://{}/verify/{name}/{payment_hash}", state.domain);
             Ok(Json(json!({
                 "status": "OK",
                 "pr": invoice,
-                "verify": verify_url,
+                // "verify": verify_url,
                 "routes": [],
             })))
         }
